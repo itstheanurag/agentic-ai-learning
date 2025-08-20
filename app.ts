@@ -41,14 +41,14 @@ const message = [
     ]
 
 async function getGroqChatCompletion(userPrompt: string) {
-    message.push({
-      role: "user",
-      content: userPrompt
-    });
-
-    console.log(message.length)
   return groq.chat.completions.create({
-    messages: message as any,
+    messages: [
+        ...message,
+        {
+            role:"user",
+            content: userPrompt
+        }
+    ] as unknown as any,
     model: "openai/gpt-oss-20b",
   });
 }
@@ -65,12 +65,6 @@ export async function main() {
     process.exit(0);
   };
 
-  process.on("SIGINT", cleanExit);
-  process.on("SIGTERM", cleanExit);
-  process.on("exit", () => {
-    rl.close();
-  });
-
   while (true) {
     const question = await rl.question("> ");
     if (question.toLowerCase() === "exit") {
@@ -78,6 +72,9 @@ export async function main() {
       break;
     }
 
+    process.on("SIGINT", cleanExit);
+    process.on("SIGTERM", cleanExit);
+    
     try {
       const chatCompletion = await getGroqChatCompletion(question);
       console.log("\n🤖 Answer:");
@@ -88,5 +85,10 @@ export async function main() {
     }
   }
 }
+
+process.on("unhandledRejection", (reason: any) => {
+  if (reason.name === "AbortError") return; // Ignore AbortError
+  console.error("Unhandled Rejection:", reason);
+});
 
 main();
