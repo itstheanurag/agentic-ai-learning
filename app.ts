@@ -41,14 +41,13 @@ const message = [
     ]
 
 async function getGroqChatCompletion(userPrompt: string) {
+  message.push({
+    role: "user",
+    content: userPrompt
+  });
+  
   return groq.chat.completions.create({
-    messages: [
-        ...message,
-        {
-            role:"user",
-            content: userPrompt
-        }
-    ] as unknown as any,
+    messages: message as unknown as any,
     model: "openai/gpt-oss-20b",
   });
 }
@@ -80,6 +79,12 @@ export async function main() {
       console.log("\n🤖 Answer:");
       console.log(chatCompletion.choices[0]?.message?.content || "No response");
       console.log();
+
+      message.push({
+        role: "assistant",
+        content: chatCompletion.choices[0]?.message?.content || "No response"
+      })
+
     } catch (error) {
       console.error("❌ Error fetching response:", error);
     }
